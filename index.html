@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <title>Taller Eléctrico 2x4</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" />
+
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #ffffff;
+        }
+        /* Paleta Negro y Amarillo */
+        .bg-custom-dark {
+            background-color: #1a1a1a !important;
+        }
+        .text-custom-yellow {
+            color: #ffcc00 !important;
+        }
+        .bg-custom-yellow {
+            background-color: #ffcc00 !important;
+        }
+        .btn-yellow {
+            background-color: #ffcc00;
+            color: #1a1a1a;
+            font-weight: bold;
+            border: none;
+            transition: all 0.3s ease;
+        }
+        .btn-yellow:hover {
+            background-color: #e6b800;
+            color: #000;
+            transform: translateY(-2px);
+        }
+        .nav-link:hover {
+            color: #ffcc00 !important;
+        }
+        
+        /* Tarjetas de Servicios */
+        .card-servicio {
+            background-color: #242424 !important;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            transition: transform 0.3s ease;
+        }
+        .card-servicio:hover {
+            transform: translateY(-5px);
+        }
+        .text-description {
+            color: #e0e0e0 !important;
+            font-size: 14.5px;
+        }
+
+        /* Caja del Mapa */
+        #mapa-taller {
+            height: 350px;
+            width: 100%;
+            border-radius: 12px;
+            border: 3px solid #ffcc00;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        /* Estilos del Chatbot Flotante */
+        #chatbot-launcher {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            width: 60px;
+            height: 60px;
+            background-color: #ffcc00;
+            color: #1a1a1a;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            transition: transform 0.3s;
+        }
+        #chatbot-launcher:hover {
+            transform: scale(1.1);
+        }
+        #chatbot-box {
+            position: fixed;
+            bottom: 95px;
+            right: 25px;
+            width: 350px;
+            height: 400px;
+            background-color: #fff;
+            border-radius: 12px;
+            box-shadow: 0 5px 25px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none;
+            flex-direction: column;
+            overflow: hidden;
+            border: 2px solid #ffcc00;
+        }
+        .chatbot-header {
+            background-color: #1a1a1a;
+            color: #ffcc00;
+            padding: 15px;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .chatbot-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            background-color: #f8f9fa;
+        }
+        .chat-msg {
+            margin-bottom: 12px;
+            padding: 10px 14px;
+            border-radius: 8px;
+            max-width: 80%;
+            font-size: 14px;
+        }
+        .msg-bot {
+            background-color: #e9ecef;
+            color: #333;
+            align-self: flex-start;
+        }
+        .msg-user {
+            background-color: #ffcc00;
+            color: #1a1a1a;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .chatbot-options {
+            padding: 10px;
+            background-color: #fff;
+            border-top: 1px solid #eee;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+        .btn-chat-option {
+            background-color: #1a1a1a;
+            color: #fff;
+            border: 1px solid #1a1a1a;
+            padding: 5px 10px;
+            font-size: 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .btn-chat-option:hover {
+            background-color: #ffcc00;
+            color: #1a1a1a;
+            border-color: #ffcc00;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-custom-dark shadow sticky-top">
+        <div class="container">
+            <a class="navbar-brand text-custom-yellow h1 fw-bold mb-0" href="#inicio">
+                ⚡ Taller Eléctrico 2x4
+            </a>
+            <button class="navbar-toggler border-0 text-custom-yellow" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
+                <ul class="navbar-nav">
+                    <li class="nav-item"><a class="nav-link text-light fw-bold mx-2" href="#servicios">Servicios</a></li>
+                    <li class="nav-item"><a class="nav-link text-light fw-bold mx-2" href="#contacto">Contacto y Horarios</a></li>
+                    <li class="nav-item"><a class="nav-link text-light fw-bold mx-2" href="#ubicacion">Ubicación</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div id="inicio" class="bg-custom-dark text-center py-5 text-white">
+        <div class="container py-5">
+            <h1 class="display-4 fw-bold text-custom-yellow">Reparación y Embobinado </h1>
+            <p class="lead text-light mb-4">Especialistas en motores eléctricos para agua, molinos, máquinas de coser y aparatos comerciales.</p>
+            <div class="d-flex justify-content-center gap-3 flex-wrap">
+                <a href="https://wa.me/522381082359" target="_blank" class="btn btn-yellow btn-lg px-4"><i class="fab fa-whatsapp me-2"></i>Escribir por WhatsApp</a>
+                <a href="tel:2381082359" class="btn btn-outline-light btn-lg px-4"><i class="fas fa-phone-alt me-2"></i>Llamar Ahora</a>
+            </div>
+        </div>
+    </div>
+
+    <div id="servicios" class="container py-5 text-center">
+        <h2 class="h1 fw-bold mb-2">Nuestros Servicios</h2>
+        <div class="bg-custom-yellow mx-auto mb-5" style="width: 60px; height: 4px; border-radius: 2px;"></div>
+        
+        <div class="row g-4">
+            <div class="col-md-4">
+                <div class="p-4 card-servicio h-100" style="border-top: 4px solid #ffcc00;">
+                    <i class="fas fa-tint text-custom-yellow display-5 mb-3"></i>
+                    <h3 class="h5 fw-bold text-custom-yellow">Bombas y Motores de Agua</h3>
+                    <p class="text-description mb-0">Embobinado completo, cambio de baleros, sellos mecánicos y reparación.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4 card-servicio h-100" style="border-top: 4px solid #ffcc00;">
+                    <i class="fas fa-industry text-custom-yellow display-5 mb-3"></i>
+                    <h3 class="h5 fw-bold text-custom-yellow">Molinos y Máquinas de Coser</h3>
+                    <p class="text-description mb-0">Mantenimiento preventivo y correctivo para motores comerciales e industriales de trabajo continuo.</p>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="p-4 card-servicio h-100" style="border-top: 4px solid #ffcc00;">
+                    <i class="fas fa-bolt text-custom-yellow display-5 mb-3"></i>
+                    <h3 class="h5 fw-bold text-custom-yellow">Embobinado en General</h3>
+                    <p class="text-description mb-0">Reconstrucción total del sistema eléctrico interno para motores monofásicos , bifásicos y trifásicos.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="contacto" class="container-fluid bg-custom-dark py-5" style="border-bottom: 5px solid #ffcc00; border-top: 5px solid #ffcc00;">
+        <div class="col-md-6 m-auto text-center p-4" style="background: rgba(0, 0, 0, 0.6); border: 2px solid #ffcc00; border-radius: 15px; box-shadow: 0px 4px 20px rgba(255, 204, 0, 0.15);">
+            <h2 class="h1 text-custom-yellow fw-bold mb-4"><i class="far fa-clock text-custom-yellow me-2"></i>Horarios de Atención</h2>
+            <div class="text-light fs-5">
+                <div style="display: flex; justify-content: space-between; max-width: 320px; margin: 10px auto; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px;">
+                    <span>Lunes a viernes:</span>
+                    <span class="text-custom-yellow fw-bold">9:00 am - 8:00 pm</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; max-width: 320px; margin: 10px auto; padding-bottom: 5px;">
+                    <span>Sábados:</span>
+                    <span class="text-custom-yellow fw-bold">9:00 am - 1:00 pm</span>
+                </div>
+            </div>
+        </div>
+    </div>
+<!-- volante digital-->
+ <!-- volante digital-->
+    <div class="container text-center py-5">
+        <p class="text-muted mb-3">Nuestro Volante Digital Interactivo:</p>
+        <div class="d-inline-block p-4 bg-custom-dark text-white rounded shadow-lg" style="border: 4px solid #ffcc00; max-width: 400px; width: 100%;">
+            <span class="display-3 text-custom-yellow mb-2 d-block"><i class="fas fa-cogs"></i></span>
+            <h3 class="fw-bold text-custom-yellow h2 mb-3">Taller Eléctrico 2x4</h3>
+            <p class="fs-5 border-bottom border-secondary pb-3 text-light">¡Reparación profesional!</p>
+            
+            <ul class="text-start list-unstyled my-4 ps-2 fs-6">
+                <li class="mb-2"><i class="fas fa-check-circle text-custom-yellow me-2"></i> Embobinado y reparación de Motores</li>
+                <li class="mb-2"><i class="fas fa-check-circle text-custom-yellow me-2"></i> Bombas de Agua y Molinos</li>
+                <li class="mb-2"><i class="fas fa-check-circle text-custom-yellow me-2"></i> Máquinas de Coser</li>
+            </ul>
+
+            <div class="row g-2 mb-3">
+                <div class="col-6">
+                    <div class="bg-dark p-2 rounded h-100" style="border-left: 3px solid #ffcc00; background-color: #111 !important;">
+                        <p class="small text-custom-yellow mb-1 fw-bold" style="font-size: 11px;"><i class="fas fa-phone-alt me-1"></i> LLAMADAS:</p>
+                        <p class="mb-0 fw-bold text-white small">238 108 2359</p>
+                    </div>
+                </div>
+                <div class="col-6">
+                    <div class="bg-dark p-2 rounded h-100" style="border-left: 3px solid #25D366; background-color: #111 !important;">
+                        <p class="small text-success mb-1 fw-bold" style="font-size: 11px;"><i class="fab fa-whatsapp me-1"></i> WHATSAPP:</p>
+                        <p class="mb-0 fw-bold text-white small">238 108 2359</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-3 mb-2 rounded border border-secondary" style="background-color: #151515;">
+                <p class="text-custom-yellow small fw-bold mb-2"><i class="fas fa-map-marked-alt me-1"></i> NUESTRA UBICACIÓN:</p>
+                
+                <div class="d-flex align-items-center justify-content-between gap-2">
+                    <div class="bg-white p-1 rounded shadow-sm" style="width: 90px; height: 90px;">
+                        <img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://maps.google.com/?q=Priv.+de+La+9+Sur+25,+El+Sotolin,+75784+Tehuacan,+Pue." alt="QR Ubicación" class="img-fluid">
+                    </div>
+                    
+                    <div class="text-start flex-grow-1 ps-2">
+                        <p class="small mb-2 text-light" style="font-size: 12px; line-height: 1.3;">Priv. de La 9 Sur 25, El Sotolín, 75784 Tehuacán, Pue.</p>
+                        <a href="https://maps.google.com/?q=Priv.+de+La+9+Sur+25,+El+Sotolin,+75784+Tehuacan,+Pue." target="_blank" class="btn btn-yellow btn-sm w-100 py-1" style="font-size: 11px;">
+                            <i class="fas fa-location-arrow me-1"></i> Abrir Link de Mapa
+                        </a>
+                    </div>
+                </div>
+                <small class="text-muted d-block mt-2" style="font-size: 10px;">¡Escanea el QR o dale clic al botón para llegar!</small>
+            </div>
+            
+            <p class="small text-muted mt-3 mb-0" style="font-size: 11px;">Tehuacán, Puebla.</p>
+        </div>
+    </div>
+
+    <div id="ubicacion" class="container py-5">
+        <div class="row align-items-center">
+            <div class="col-md-5 mb-4 mb-md-0">
+                <h2 class="fw-bold mb-3"><i class="fas fa-map-marker-alt text-custom-yellow me-2"></i>Dónde Encontrarnos</h2>
+                <p class="fs-5 text-muted">Estamos ubicados en una zona accesible lista para atenderte:</p>
+                <p class="fw-bold">Priv. de La 9 Sur 25, El Sotolín,<br>Código Postal 75784, Tehuacán, Puebla, México.</p>
+                <a href="https://maps.google.com/?q=Priv.+de+La+9+Sur+25,+El+Sotolin,+75784+Tehuacan,+Pue." target="_blank" class="btn btn-yellow mt-2"><i class="fas fa-directions me-2"></i>Abrir en Google Maps</a>
+            </div>
+            <div class="col-md-7">
+                <div id="mapa-taller"></div>
+            </div>
+        </div>
+    </div>
+    
+<!--chat-->
+    <div id="chatbot-launcher" onclick="toggleChat()"><i class="fas fa-comments"></i></div>
+
+    <div id="chatbot-box">
+        <div class="chatbot-header">
+            <span><i class="fas fa-bolt text-custom-yellow me-2"></i>Asistente 2x4</span>
+            <span style="cursor:pointer;" onclick="toggleChat()"><i class="fas fa-times"></i></span>
+        </div>
+        <div class="chatbot-messages d-flex flex-column" id="chat-messages">
+            <div class="chat-msg msg-bot">¡Hola! Bienvenido al Taller Eléctrico 2x4. ⚡ ¿En qué podemos ayudarte hoy? Selecciona una opción:</div>
+        </div>
+        <div class="chatbot-options" id="chat-options">
+            <button class="btn-chat-option" onclick="botResponse('servicios')">🛠️ Servicios</button>
+            <button class="btn-chat-option" onclick="botResponse('horarios')">🕒 Horarios</button>
+            <button class="btn-chat-option" onclick="botResponse('ubicacion')">📍 Ubicación</button>
+        </div>
+    </div>
+
+    <footer class="bg-custom-dark text-white py-4" style="border-top: 4px solid #ffcc00;">
+        <div class="container text-center">
+            <h2 class="h4 text-custom-yellow fw-bold mb-2">Taller Eléctrico 2x4</h2>
+            <p class="small text-muted mb-3">Tehuacán, Puebla, México</p>
+            <hr style="background-color: rgba(255,255,255,0.1);">
+            <p class="small mb-0 text-light">Designer Web Luz Flores © 2026</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
+    
+    <script>
+    // Coordenadas ajustadas manualmente para subir el marcador a la 9 Sur
+    // Aumentamos ligeramente la latitud para alejarlo de la 5 Sur
+    var latitud = 18.46050; 
+    var longitud = -97.38490;
+
+    // Inicializar Mapa
+    var map = L.map('mapa-taller').setView([latitud, longitud], 18);
+    
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    // Marcador en la ubicación corregida
+    L.marker([latitud, longitud]).addTo(map)
+        .bindPopup('<b>Taller Eléctrico 2x4</b><br>Priv. de La 9 Sur 25, El Sotolín.')
+        .openPopup();
+
+
+        // Lógica del Chatbot
+        function toggleChat() {
+            var chatBox = document.getElementById('chatbot-box');
+            chatBox.style.display = (chatBox.style.display === 'none' || chatBox.style.display === '') ? 'flex' : 'none';
+        }
+
+        function botResponse(option) {
+            var messagesContainer = document.getElementById('chat-messages');
+            var userMsg = document.createElement('div');
+            userMsg.classList.add('chat-msg', 'msg-user');
+            
+            var botMsg = document.createElement('div');
+            botMsg.classList.add('chat-msg', 'msg-bot');
+
+            if (option === 'servicios') {
+                userMsg.innerText = "Quiero saber los servicios";
+                botMsg.innerHTML = "🔧 <b>Nuestros Servicios:</b><br>• Embobinado y reparación de bombas de agua.<br>• Motores para máquinas de coser y molinos comerciales.<br>• Mantenimiento general y cambio de refacciones mecánicas.";
+            } else if (option === 'horarios') {
+                userMsg.innerText = "Ver los horarios";
+                botMsg.innerHTML = "🕒 <b>Horarios:</b><br>• Lun a Vie: 9am - 8pm<br>• Sábados: 9am - 1pm.";
+            } else if (option === 'ubicacion') {
+                userMsg.innerText = "Ver la ubicación";
+                botMsg.innerHTML = "📍 Calle 9 sur #301, Col. La Purísima, Tehuacán, Pue.";
+            }
+
+            messagesContainer.appendChild(userMsg);
+            setTimeout(function() {
+                messagesContainer.appendChild(botMsg);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            }, 400);
+        }
+    </script>
+</body>
+
+</html>
